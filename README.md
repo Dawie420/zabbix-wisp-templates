@@ -4,7 +4,7 @@ Production-tested Zabbix templates for monitoring Wireless ISP (WISP) infrastruc
 
 Built and refined through real deployment work for a live regional WISP, not written from documentation alone. Each template ships with the items, low-level discovery (LLD) rules, triggers, and macros needed to actually run in production — not just a bare metric list.
 
-**Full write-up with context on the design decisions, alerting logic, and dashboard structure:** [insert link to your PtMP case study Google Doc]
+   **[Read the full case study here](https://docs.google.com/document/d/1XUM5_YdoFCgTL2L8tD67BemfjKhf6VGDwnSYDy72Y6A/edit?usp=sharing)** — full context on the design decisions, alerting logic, and dashboard structure.
 
 ## What's Here
 
