@@ -8,7 +8,7 @@ Built and refined through real deployment work for a live regional WISP, not wri
 
 ## What's Here
 
-| Category | Vendors Covered | Status |
+| Category | Vendors Covered | Status  |
 |---|---|---|
 | PtMP Base Stations | MikroTik, Cambium, Ubiquiti (UBNT) | ✅ Available |
 | PtP Backhaul | [insert vendors] | 🔜 Coming soon |
