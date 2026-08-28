@@ -1,0 +1,1664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.4</version>
+    <template_groups>
+        <template_group>
+            <uuid>493602de04a3496f8cacf2badd6dd941</uuid>
+            <name>Templates/Applications</name>
+        </template_group>
+        <template_group>
+            <uuid>27b2bd29cfda425db29150d2f0e8b984</uuid>
+            <name>Templates/zDEV/MikroTik</name>
+        </template_group>
+    </template_groups>
+    <templates>
+        <template>
+            <uuid>d585ef2b5bbc4555847714923baeb2d1</uuid>
+            <template>MikroTik BaseBox Sector SNMP</template>
+            <name>MikroTik BaseBox Sector SNMP</name>
+            <description>MikroTik BaseBox sector template for RouterOS wireless access points.
+
+Built from live SNMP walk data from host 10.2.35.2.
+Monitors CPU, uptime, LAN status, SSID, client counts, frequency, band, noise floor, voltage, temperature, ICMP, and connected client RX signal.
+
+SNMP v2c. Zabbix 7.0/7.4 compatible.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>4f7422b298ed490dbe7dc046f7c57c5e</uuid>
+                    <name>ICMP: Ping</name>
+                    <type>SIMPLE</type>
+                    <key>icmpping</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <description>ICMP ping check — 1=up, 0=down</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>network</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>a607b5f92a1d492c9636f32a63ba4d78</uuid>
+                            <expression>max(/MikroTik BaseBox Sector SNMP/icmpping,5m)=0</expression>
+                            <name>Device is unavailable (ICMP ping failed)</name>
+                            <priority>HIGH</priority>
+                            <description>Device has not responded to ICMP ping for 5 minutes.</description>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>availability</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>system</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>3462fce208a54ae5a6e5e1fd0f3daab7</uuid>
+                    <name>ICMP: Packet loss</name>
+                    <type>SIMPLE</type>
+                    <key>icmppingloss</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>%</units>
+                    <description>ICMP ping packet loss percentage</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>network</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>f2390c0204324a01a4b1deb97ed4259c</uuid>
+                            <expression>min(/MikroTik BaseBox Sector SNMP/icmppingloss,5m)&gt;{$ICMP.LOSS.WARN}</expression>
+                            <name>High ICMP packet loss (&gt;{$ICMP.LOSS.WARN}%)</name>
+                            <priority>WARNING</priority>
+                            <description>ICMP packet loss above threshold for 5 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>availability</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>system</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>85bcf23ebf3d4624963dabcc595473fa</uuid>
+                    <name>ICMP: Response time</name>
+                    <type>SIMPLE</type>
+                    <key>icmppingsec</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>s</units>
+                    <description>ICMP ping response time in seconds</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>network</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>8e770467ae06410ab3480c33befbd72a</uuid>
+                    <name>LAN: Operational status</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.2.2.1.8.{$LAN.IFINDEX}</snmp_oid>
+                    <key>net.if.status[lan]</key>
+                    <delay>30s</delay>
+                    <history>7d</history>
+                    <description>LAN operational status. Live walk shows ether1 = ifIndex 1.</description>
+                    <valuemap>
+                        <name>IF-MIB::ifOperStatus</name>
+                    </valuemap>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>interface</value>
+                        </tag>
+                        <tag>
+                            <tag>interface</tag>
+                            <value>lan</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>ac5445feb1bb432da1c3c7d2a1452833</uuid>
+                            <expression>max(/MikroTik BaseBox Sector SNMP/net.if.status[lan],5m)=2</expression>
+                            <name>LAN port is down</name>
+                            <priority>HIGH</priority>
+                            <description>The LAN port (ether1 by default) is down.</description>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>interface</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>availability</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>820d7872c1bd40908567efcdd95a6655</uuid>
+                    <name>CPU: Utilization</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.25.3.3.1.2.1</snmp_oid>
+                    <key>system.cpu.util</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>%</units>
+                    <description>CPU utilization percentage (HOST-RESOURCES-MIB hrProcessorLoad). Live walk returned 17 on 10.2.35.2.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>cpu</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>0bb1ae241ad8467caf906b767a7a14fe</uuid>
+                            <expression>min(/MikroTik BaseBox Sector SNMP/system.cpu.util,5m)&gt;{$CPU.UTIL.CRIT}</expression>
+                            <name>CPU utilization is critically high (&gt;{$CPU.UTIL.CRIT}%)</name>
+                            <priority>HIGH</priority>
+                            <description>CPU has been above threshold for 5 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>cpu</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>performance</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>83136a1bca0a45dc9ff6770e637817e7</uuid>
+                    <name>System: Name</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.5.0</snmp_oid>
+                    <key>system.name</key>
+                    <delay>1h</delay>
+                    <history>7d</history>
+                    <value_type>CHAR</value_type>
+                    <description>System hostname (sysName).</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>125366c01c2e4c42af04bb5ed6fe1a73</uuid>
+                    <name>System: RouterOS version</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.4.4.0</snmp_oid>
+                    <key>system.sw.version</key>
+                    <delay>1h</delay>
+                    <history>7d</history>
+                    <value_type>CHAR</value_type>
+                    <description>RouterOS firmware version.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>146c9eaea1b54f329b34ec29865671e9</uuid>
+                    <name>System: Temperature</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.3.100.1.3.14</snmp_oid>
+                    <key>system.temperature</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>C</units>
+                    <description>Gauge value for &quot;temperature&quot;. Live walk returned 42.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>hardware</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>9e1e491636a64b399e35edd9de0a216d</uuid>
+                    <name>System: Uptime</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.3.0</snmp_oid>
+                    <key>system.uptime</key>
+                    <delay>5m</delay>
+                    <history>7d</history>
+                    <units>uptime</units>
+                    <description>System uptime in seconds (sysUpTime centiseconds * 0.01). Live walk showed 17 days, 23:32:11.</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>0.01</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>b95e300b270a4dcdaf75079d15cdf8b5</uuid>
+                            <expression>last(/MikroTik BaseBox Sector SNMP/system.uptime)&lt;10m</expression>
+                            <name>Device has been restarted (uptime &lt; 10m)</name>
+                            <priority>WARNING</priority>
+                            <description>Device rebooted — uptime under 10 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>availability</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>system</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>ff2f2071620c4d0f9100df3a93964743</uuid>
+                    <name>System: Voltage</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.3.100.1.3.13</snmp_oid>
+                    <key>system.voltage</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>V</units>
+                    <description>Gauge value for &quot;voltage&quot;. Live walk returned 245 -&gt; 24.5 V.</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>0.1</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>hardware</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>ac4813adeeee470c90aed0e5036f6690</uuid>
+                    <name>Wireless: Band</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.8.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.band</key>
+                    <delay>5m</delay>
+                    <history>7d</history>
+                    <value_type>CHAR</value_type>
+                    <description>AP band/channel string. Live walk showed 5660/20-Ce/an(9dBm).</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>477ae7843c8c48db941d8a3b5881071d</uuid>
+                    <name>Wireless: Authenticated client count</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.11.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.client.auth.count</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <description>Authenticated wireless client count. Live walk showed 30.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>8abe75eff7994d31bf5d32188edea816</uuid>
+                    <name>Wireless: Client count</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.6.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.client.count</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <description>Registered wireless client count. Live walk showed 30.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>1cf4e822496449f9a0b16bb60736da7b</uuid>
+                    <name>Wireless: Frequency</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.7.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.frequency</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>MHz</units>
+                    <description>AP operating frequency. Live walk showed 5660 MHz.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>275260f42bc04c9dae47221c1670a84d</uuid>
+                    <name>Wireless: Noise floor</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.9.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.noise.floor</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>dBm</units>
+                    <description>AP noise floor. Live walk showed -119 dBm.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>5e14ca2f97854b44945a84bf65818cdd</uuid>
+                    <name>Wireless: SSID</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.4.{$WLAN.APINDEX}</snmp_oid>
+                    <key>wireless.ssid</key>
+                    <delay>5m</delay>
+                    <history>7d</history>
+                    <value_type>CHAR</value_type>
+                    <description>Wireless AP SSID. Live walk showed BBOX_HUM_STEV_A300.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>687bc8cbe681471caa62530be81dcb6f</uuid>
+                    <name>Wireless client discovery</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#WLMAC},1.3.6.1.4.1.14988.1.1.1.2.1.1,{#WLNAME},1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.client.discovery</key>
+                    <delay>2m</delay>
+                    <lifetime>3600</lifetime>
+                    <description>Discovers connected wireless clients from the MikroTik registration table. Uses station MAC and radio/client name when available.</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>45009a48cbb345849bf2c9aba70f2a12</uuid>
+                            <name>Client {#WLNAME} ({#WLMAC}) : RX signal</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.14988.1.1.1.2.1.3.{#SNMPINDEX}</snmp_oid>
+                            <key>wireless.client.signal.rx[{#SNMPINDEX}]</key>
+                            <delay>60s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <description>Client RX signal strength from MikroTik registration table (mtxrWlRtabStrength).</description>
+                            <tags>
+                                <tag>
+                                    <tag>client</tag>
+                                    <value>{#WLNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>signal</value>
+                                </tag>
+                                <tag>
+                                    <tag>mac</tag>
+                                    <value>{#WLMAC}</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>3dc0f0190e4e42d08ad3f87ca79cfb91</uuid>
+                                    <expression>max(/MikroTik BaseBox Sector SNMP/wireless.client.signal.rx[{#SNMPINDEX}],5m)&lt;{$SIGNAL.WARN}</expression>
+                                    <name>Client {#WLNAME} ({#WLMAC}) : Weak RX signal (&lt; {$SIGNAL.WARN} dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <description>Client RX signal has been below threshold for 5 minutes.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>client</tag>
+                                            <value>{#WLNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>component</tag>
+                                            <value>signal</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$CPU.UTIL.CRIT}</macro>
+                    <value>90</value>
+                    <description>CPU utilization critical threshold (%)</description>
+                </macro>
+                <macro>
+                    <macro>{$ICMP.LOSS.WARN}</macro>
+                    <value>20</value>
+                    <description>Warning threshold for ICMP packet loss (%)</description>
+                </macro>
+                <macro>
+                    <macro>{$LAN.IFINDEX}</macro>
+                    <value>1</value>
+                    <description>LAN interface index. Live walk shows ether1 = ifIndex 1 on 10.2.35.2.</description>
+                </macro>
+                <macro>
+                    <macro>{$SIGNAL.WARN}</macro>
+                    <value>-75</value>
+                    <description>Warning threshold for weak client RX signal (dBm).</description>
+                </macro>
+                <macro>
+                    <macro>{$SNMP_COMMUNITY}</macro>
+                    <value>snmp-zDEV-wifi</value>
+                    <description>SNMP v2c community string</description>
+                </macro>
+                <macro>
+                    <macro>{$WLAN.APINDEX}</macro>
+                    <value>2</value>
+                    <description>Wireless AP table index. Live walk shows wlan1/AP index 2 on 10.2.35.2.</description>
+                </macro>
+            </macros>
+            <valuemaps>
+                <valuemap>
+                    <uuid>0cf9ef28ec7d4e969348fa46ed9d3db5</uuid>
+                    <name>IF-MIB::ifOperStatus</name>
+                    <mappings>
+                        <mapping>
+                            <value>1</value>
+                            <newvalue>up</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>2</value>
+                            <newvalue>down</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>3</value>
+                            <newvalue>testing</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>4</value>
+                            <newvalue>unknown</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>5</value>
+                            <newvalue>dormant</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>6</value>
+                            <newvalue>notPresent</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>7</value>
+                            <newvalue>lowerLayerDown</newvalue>
+                        </mapping>
+                    </mappings>
+                </valuemap>
+            </valuemaps>
+        </template>
+        <template>
+            <uuid>b03794b1100743549fbd693a5a779a43</uuid>
+            <template>MikroTik Sector Client Signals</template>
+            <name>MikroTik Sector Client Signals</name>
+            <description>Signal-only MikroTik sector template.
+
+Built from the MikroTik RB921 sector client identity discovery logic.
+Discovers wireless clients by MikroTik registration-table identity so RX signal items are named with the client/device name.
+
+Keeps only the internal identity walk and the per-client RX signal discovery.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>5137913795f74bc69a90773e5dafd1e8</uuid>
+                    <name>Wireless clients identity walk</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>walk[1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.clients.identity.walk</key>
+                    <delay>300s</delay>
+                    <history>1d</history>
+                    <value_type>TEXT</value_type>
+                    <description>Internal walk of wireless client identity strings for device-name-based signal discovery.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>internal</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>38f3737b9ccf42e7a0c0768d52a620fb</uuid>
+                    <name>Wireless client RX signal discovery by device name</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#CLIENT},1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.client.discovery</key>
+                    <delay>10m</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#CLIENT}</macro>
+                                <value>.+</value>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <description>Discovers registered wireless clients using MikroTik registration table identity strings and names each signal item by the client/device name.</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>c315674626ce49dbae987c8d3c8710d2</uuid>
+                            <name>RX signal: {#CLIENT}</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.14988.1.1.1.2.1.3.{#SNMPINDEX}</snmp_oid>
+                            <key>wireless.client.rx[{#SNMPINDEX}]</key>
+                            <delay>60s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <description>Client RX signal from MikroTik registration table, labeled by discovered client/device identity.</description>
+                            <tags>
+                                <tag>
+                                    <tag>client</tag>
+                                    <value>{#CLIENT}</value>
+                                </tag>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>signal</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>6a50d9f6d8414d4ebcaef3f1fa5af0c1</uuid>
+                                    <expression>last(/MikroTik Sector Client Signals/wireless.client.rx[{#SNMPINDEX}])&lt;{$CLIENT.RSSI.WARN}</expression>
+                                    <name>RX signal: {#CLIENT} is weak (&lt;{$CLIENT.RSSI.WARN} dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <description>Client signal is weaker than configured threshold.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>component</tag>
+                                            <value>signal</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>scope</tag>
+                                            <value>wireless</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$CLIENT.RSSI.WARN}</macro>
+                    <value>-70</value>
+                    <description>Weak client RSSI warning threshold (dBm)</description>
+                </macro>
+                <macro>
+                    <macro>{$SNMP_COMMUNITY}</macro>
+                    <value>snmp-zDEV-wifi</value>
+                    <description>SNMP v2c community string</description>
+                </macro>
+            </macros>
+        </template>
+        <template>
+            <uuid>771e534498e94c72accee1535d11c5a8</uuid>
+            <template>MikroTik Sector with Client Count</template>
+            <name>MikroTik Sector with Client Count</name>
+            <description>Sector/AP template for MikroTik RB921-type AP at 10.2.34.2.
+Built from the working Template_MikroTik_RB921_Sector_SNMP_10_2_41_130
+with only the unsupported host-specific items removed for this device.
+Keeps ICMP, system health, LAN status, memory, CPU, wireless client count,
+and per-client RX signal discovery.
+Removes Wireless: Band and WLAN: Interface comment because 10.2.34.2 returns
+blank ifAlias values for interfaces and does not expose the same band OID/index
+structure used on 10.2.41.130.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>ad97006f0210430c9e7611ff833fcf13</uuid>
+                    <name>ICMP packet loss</name>
+                    <type>SIMPLE</type>
+                    <key>icmppingloss[{HOST.CONN},5,1000,56,500]</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <description>ICMP packet loss percentage to the device IP.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>icmp</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>3533fb81735c40deb0e691acb9401e30</uuid>
+                            <expression>min(/MikroTik Sector with Client Count/icmppingloss[{HOST.CONN},5,1000,56,500],5m)&gt;{$ICMP.LOSS.WARN}</expression>
+                            <name>High ICMP packet loss (&gt;{$ICMP.LOSS.WARN}%)</name>
+                            <priority>WARNING</priority>
+                            <description>ICMP packet loss has been above threshold for 5 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>icmp</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>availability</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>8e025b37a2cc44b59c34e989cd835e66</uuid>
+                    <name>ICMP response time</name>
+                    <type>SIMPLE</type>
+                    <key>icmppingsec[{HOST.CONN},5,1000,56,500]</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Average ICMP response time to the device IP.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>icmp</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>c347fb9ff80d4a2f9200b3b55236c2fd</uuid>
+                    <name>ICMP ping</name>
+                    <type>SIMPLE</type>
+                    <key>icmpping[{HOST.CONN},5,1000,56,500]</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <description>ICMP ping reachability to the device IP.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>icmp</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>ec84b6439fbc4361b081959cd3d885ba</uuid>
+                            <expression>max(/MikroTik Sector with Client Count/icmpping[{HOST.CONN},5,1000,56,500],1m)=0</expression>
+                            <name>Device is unavailable by ICMP ping</name>
+                            <priority>HIGH</priority>
+                            <description>No successful ICMP ping replies to the device for 1 minute.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>icmp</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>availability</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>3094cbafeb0c487ea1688ae84d02ae60</uuid>
+                    <name>LAN: Operational status</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.2.2.1.8.1</snmp_oid>
+                    <key>lan.status</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <description>Operational status of ether1.</description>
+                    <valuemap>
+                        <name>IF-MIB::ifOperStatus</name>
+                    </valuemap>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>interface</value>
+                        </tag>
+                        <tag>
+                            <tag>interface</tag>
+                            <value>lan</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>30201cb3d9d94e90b8930e8da102bbd3</uuid>
+                    <name>CPU: Utilization</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.25.3.3.1.2.1</snmp_oid>
+                    <key>system.cpu.util</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>%</units>
+                    <description>CPU utilization percentage.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>cpu</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>784dd224d585498b9eed1744d450662e</uuid>
+                            <expression>min(/MikroTik Sector with Client Count/system.cpu.util,5m)&gt;{$CPU.UTIL.CRIT}</expression>
+                            <name>CPU utilization is critically high (&gt;{$CPU.UTIL.CRIT}%)</name>
+                            <priority>HIGH</priority>
+                            <description>CPU utilization above threshold for 5 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>cpu</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>performance</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>a51be23af05b47ebaa4cea508e7405a9</uuid>
+                    <name>System: Model</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.1.0</snmp_oid>
+                    <key>system.model</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <value_type>CHAR</value_type>
+                    <description>System description / model (sysDescr).</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>5e01c5580edd447e8b45fed2de38b61c</uuid>
+                    <name>System: Name</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.5.0</snmp_oid>
+                    <key>system.name</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <value_type>CHAR</value_type>
+                    <description>System hostname (sysName).</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>3c921aceed134c45a0c21e88c99595b1</uuid>
+                    <name>System: RouterOS version</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.4.4.0</snmp_oid>
+                    <key>system.sw.version</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <value_type>CHAR</value_type>
+                    <description>RouterOS software version.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>c7dd08e5b5c5454f8c4f2c0de1e1e491</uuid>
+                    <name>System: Temperature</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.3.100.1.3.14</snmp_oid>
+                    <key>system.temp</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>C</units>
+                    <description>Device temperature from MikroTik health.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>hardware</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>6c151e0fd66542d2867242a2751091b8</uuid>
+                    <name>System: Uptime</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.3.0</snmp_oid>
+                    <key>system.uptime</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <units>uptime</units>
+                    <description>System uptime from sysUpTime.</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>0.01</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>68bdbd55add643c18d424171d4f22d97</uuid>
+                    <name>System: Voltage</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.3.100.1.3.13</snmp_oid>
+                    <key>system.voltage</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>V</units>
+                    <description>Input voltage from MikroTik health.</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>0.1</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>hardware</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>ed212b933f914fc49fc8850da979923f</uuid>
+                    <name>Memory: Total</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.25.2.3.1.5.65536</snmp_oid>
+                    <key>vm.memory.total</key>
+                    <delay>5m</delay>
+                    <history>7d</history>
+                    <units>B</units>
+                    <description>Total memory in bytes (hrStorageSize index 65536).</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>1024</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>memory</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>f07837a8f1614cd186ea88fee3d6485d</uuid>
+                    <name>Memory: Used</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.25.2.3.1.6.65536</snmp_oid>
+                    <key>vm.memory.used</key>
+                    <delay>60s</delay>
+                    <history>7d</history>
+                    <units>B</units>
+                    <description>Used memory in bytes (hrStorageUsed index 65536).</description>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>1024</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>memory</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>00dcc0a0fa274a6693108df81348af60</uuid>
+                    <name>Memory: Utilization</name>
+                    <type>CALCULATED</type>
+                    <key>vm.memory.util</key>
+                    <delay>180s</delay>
+                    <history>7d</history>
+                    <units>%</units>
+                    <params>last(//vm.memory.used)/last(//vm.memory.total)*100</params>
+                    <description>Memory utilization percentage.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>memory</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>a4a825eb8f9b45c38405fac76d2acb0f</uuid>
+                            <expression>min(/MikroTik Sector with Client Count/vm.memory.util,5m)&gt;{$MEMORY.UTIL.MAX}</expression>
+                            <name>Memory utilization is critically high (&gt;{$MEMORY.UTIL.MAX}%)</name>
+                            <priority>AVERAGE</priority>
+                            <description>Memory utilization above threshold for 5 minutes.</description>
+                            <tags>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>memory</value>
+                                </tag>
+                                <tag>
+                                    <tag>scope</tag>
+                                    <value>performance</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>3a352e2b9714490c98ecd8e6f828ff76</uuid>
+                    <name>Wireless: Registered client count</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.clients.count</key>
+                    <history>7d</history>
+                    <description>Number of discovered wireless clients from registration table identity walk.</description>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var lines = value.split(/\r?\n/);
+var count = 0;
+for (var i = 0; i   &lt; lines.length; i++) {
+  var line = lines[i].trim();
+  if (line !==   '' &amp;&amp; line.indexOf('= STRING:') !== -1) { count++; }
+}
+return count;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>wireless.clients.identity.walk</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>wireless</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>b4b626ec2ec94ac58d50cc7d51c2fc10</uuid>
+                    <name>Wireless clients identity walk</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>walk[1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.clients.identity.walk</key>
+                    <delay>300s</delay>
+                    <history>1d</history>
+                    <value_type>TEXT</value_type>
+                    <description>Internal walk of wireless client identity strings for count/dependent logic.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>internal</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>c8266a7e0cd94cf5913ecbf1123f5404</uuid>
+                    <name>Wireless client RX signal discovery</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#CLIENT},1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.client.discovery</key>
+                    <delay>10m</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#CLIENT}</macro>
+                                <value>.+</value>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <description>Discovers registered wireless clients using MikroTik registration table identity strings.</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>544b2b0a7c354c32ae789d37e4657a20</uuid>
+                            <name>Client {#CLIENT}: RX signal</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.14988.1.1.1.2.1.3.{#SNMPINDEX}</snmp_oid>
+                            <key>wireless.client.rx[{#SNMPINDEX}]</key>
+                            <delay>60s</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <description>Client RX signal from MikroTik registration table.</description>
+                            <tags>
+                                <tag>
+                                    <tag>client</tag>
+                                    <value>{#CLIENT}</value>
+                                </tag>
+                                <tag>
+                                    <tag>component</tag>
+                                    <value>signal</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>ec35d6cfee334aa0af26becafa254f58</uuid>
+                                    <expression>last(/MikroTik Sector with Client Count/wireless.client.rx[{#SNMPINDEX}])&lt;{$CLIENT.RSSI.WARN}</expression>
+                                    <name>Client {#CLIENT}: RX signal is weak (&lt;{$CLIENT.RSSI.WARN} dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <description>Client signal is weaker than configured threshold.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>component</tag>
+                                            <value>signal</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>scope</tag>
+                                            <value>wireless</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$CLIENT.RSSI.WARN}</macro>
+                    <value>-75</value>
+                    <description>Weak client RSSI warning threshold (dBm)</description>
+                </macro>
+                <macro>
+                    <macro>{$CPU.UTIL.CRIT}</macro>
+                    <value>90</value>
+                    <description>CPU utilization critical threshold (%)</description>
+                </macro>
+                <macro>
+                    <macro>{$ICMP.LOSS.WARN}</macro>
+                    <value>20</value>
+                    <description>ICMP packet loss warning threshold (%)</description>
+                </macro>
+                <macro>
+                    <macro>{$MEMORY.UTIL.MAX}</macro>
+                    <value>90</value>
+                    <description>Memory utilization critical threshold (%)</description>
+                </macro>
+                <macro>
+                    <macro>{$SNMP_COMMUNITY}</macro>
+                    <value>snmp-zDEV-wifi</value>
+                    <description>SNMP v2c community string</description>
+                </macro>
+            </macros>
+            <valuemaps>
+                <valuemap>
+                    <uuid>1f78915d8e2841e8b900dd662934a61c</uuid>
+                    <name>IF-MIB::ifOperStatus</name>
+                    <mappings>
+                        <mapping>
+                            <value>1</value>
+                            <newvalue>up</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>2</value>
+                            <newvalue>down</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>3</value>
+                            <newvalue>testing</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>4</value>
+                            <newvalue>unknown</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>5</value>
+                            <newvalue>dormant</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>6</value>
+                            <newvalue>notPresent</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>7</value>
+                            <newvalue>lowerLayerDown</newvalue>
+                        </mapping>
+                    </mappings>
+                </valuemap>
+            </valuemaps>
+        </template>
+        <template>
+            <uuid>0ff2c213f894468eaea9397fb1f5a5d1</uuid>
+            <template>zDEV - MikroTik - Sector</template>
+            <name>zDEV - MikroTik - Sector</name>
+            <description>MikroTik Sector AP template. SNMP community: snmp-zDEV-wifi | Version: SNMPv2c</description>
+            <groups>
+                <group>
+                    <name>Templates/zDEV/MikroTik</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>ca0af571b5914148a0e16af0084d9c5a</uuid>
+                    <name>ICMP ping</name>
+                    <type>SIMPLE</type>
+                    <key>icmpping</key>
+                    <history>30d</history>
+                    <valuemap>
+                        <name>Ping</name>
+                    </valuemap>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>network</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>9a3adfee77f044b692c982e0c84b469b</uuid>
+                            <expression>max(/zDEV - MikroTik - Sector/icmpping,3m)=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>last(/zDEV - MikroTik - Sector/icmpping)=1</recovery_expression>
+                            <name>ICMP - Unavailable by ICMP Ping</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>6cac02464e9f41f6a27305237000ed7c</uuid>
+                    <name>ICMP ping response time</name>
+                    <type>SIMPLE</type>
+                    <key>icmppingsec</key>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>network</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>4d81c87573e94db4ac85bbc12dfc85e8</uuid>
+                    <name>Radio: Active Firmware</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.4.4.0</snmp_oid>
+                    <key>mikrotik.radio.active.firmware</key>
+                    <delay>1h</delay>
+                    <history>90d</history>
+                    <value_type>CHAR</value_type>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>radio</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>34ae5400c4154114b6235b32f2029dce</uuid>
+                    <name>Radio: Frequency</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>walk[1.3.6.1.4.1.14988.1.1.1.3.1.7]</snmp_oid>
+                    <key>mikrotik.radio.frequency</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <parameters>
+                                <parameter>INTEGER: (-?\d+)</parameter>
+                                <parameter>\1</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>radio</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>6aae51c43edb489b95ebaadb8d937748</uuid>
+                    <name>Radio: Serial Number</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.14988.1.1.7.3.0</snmp_oid>
+                    <key>mikrotik.radio.serial.number</key>
+                    <delay>1h</delay>
+                    <history>90d</history>
+                    <value_type>CHAR</value_type>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>radio</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>841a53314d7640bfa0399511cb201403</uuid>
+                    <name>Radio: SSID</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>walk[1.3.6.1.4.1.14988.1.1.1.3.1.4]</snmp_oid>
+                    <key>mikrotik.radio.ssid</key>
+                    <delay>15m</delay>
+                    <history>90d</history>
+                    <value_type>CHAR</value_type>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <parameters>
+                                <parameter>&quot;(.*)&quot;</parameter>
+                                <parameter>\1</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>radio</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>83a173671c2646f7ada9da47ec7a270c</uuid>
+                    <name>Radio: Uptime</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.3.0</snmp_oid>
+                    <key>mikrotik.radio.uptime.seconds</key>
+                    <delay>5m</delay>
+                    <history>90d</history>
+                    <units>uptime</units>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <parameters>
+                                <parameter>0.01</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>radio</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>288b2de39ad74e0dab45605d443e113f</uuid>
+                            <expression>last(/zDEV - MikroTik - Sector/mikrotik.radio.uptime.seconds)&lt;10m</expression>
+                            <name>Device rebooted</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>b4dc29e79d0048d99699e06cb8430187</uuid>
+                    <name>System: CPU usage</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.2021.11.10.0</snmp_oid>
+                    <key>mikrotik.system.cpu.usage</key>
+                    <delay>60s</delay>
+                    <history>90d</history>
+                    <units>%</units>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>cpu</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>97460b7a84064e0494436467fc1a15d2</uuid>
+                            <expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,30m)&gt;90</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,5m)&lt;=90</recovery_expression>
+                            <name>CPU usage is critical (&gt;90%)</name>
+                            <priority>DISASTER</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <uuid>3911733a2cd540a9b5552e4bc53075d4</uuid>
+                            <expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,30m)&gt;50</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,5m)&lt;=50</recovery_expression>
+                            <name>CPU usage is high (&gt;50%)</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <uuid>437f10769a7a46879f4727301089d2f1</uuid>
+                            <expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,30m)&gt;75</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>min(/zDEV - MikroTik - Sector/mikrotik.system.cpu.usage,5m)&lt;=75</recovery_expression>
+                            <name>CPU usage is high (&gt;75%)</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>72574406a31a49d08ec7826cf769e754</uuid>
+                    <name>System name</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.2.1.1.5.0</snmp_oid>
+                    <key>mikrotik.system.name</key>
+                    <delay>15m</delay>
+                    <history>90d</history>
+                    <value_type>CHAR</value_type>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>system</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>9a0ae9dd53ed4e3cbe78c957829c17b2</uuid>
+                    <name>Wireless : AP Population</name>
+                    <type>CALCULATED</type>
+                    <key>wireless.ap.population</key>
+                    <delay>10m</delay>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>round((last(//wireless.clients.count) / 50) * 100, 0)</params>
+                    <tags>
+                        <tag>
+                            <tag>ap_load</tag>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>a316a6916b7b421395898865b482e37f</uuid>
+                    <name>Wireless: Registered client count</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.clients.count</key>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var lines = value.split(/\r?\n/);
+var count = 0;
+for (var i = 0; i &lt; lines.length; i++) {
+  var line = lines[i].trim();
+  if (line !== '' &amp;&amp; line.indexOf('= STRING:') !== -1) { count++; }
+}
+return count;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>wireless.clients.identity.walk</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>stationcount</tag>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>771741bbef904d3e8c50d14fe077d150</uuid>
+                            <expression>last(/zDEV - MikroTik - Sector/wireless.clients.count)&lt;(avg(/zDEV - MikroTik - Sector/wireless.clients.count,30m)*0.8)</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>last(/zDEV - MikroTik - Sector/wireless.clients.count)&gt;=(avg(/zDEV - MikroTik - Sector/wireless.clients.count,30m)*0.9)</recovery_expression>
+                            <name>Client count dropped more than 20%</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <uuid>141739b50e9940a39f37523313eed256</uuid>
+                    <name>Wireless clients identity walk</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>walk[1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>wireless.clients.identity.walk</key>
+                    <delay>5m</delay>
+                    <value_type>TEXT</value_type>
+                </item>
+                <item>
+                    <uuid>61e1835092384ae48272fd265ca913a5</uuid>
+                    <name>SNMP - Service</name>
+                    <type>INTERNAL</type>
+                    <key>zabbix[host,snmp,available]</key>
+                    <delay>3m</delay>
+                    <valuemap>
+                        <name>Service State - SNMP</name>
+                    </valuemap>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>#Status - Availability</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>716425d14f6c425c8d5c6f23492c8544</uuid>
+                            <expression>max(/zDEV - MikroTik - Sector/zabbix[host,snmp,available],#4)=0</expression>
+                            <name>SNMP - Unavailable by SNMP Polling</name>
+                            <priority>HIGH</priority>
+                            <description>Last three attempts returned timeout.  Please check device connectivity.
+
+Ensure community public is used</description>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>ICMP - Unavailable by ICMP Ping</name>
+                                    <expression>max(/zDEV - MikroTik - Sector/icmpping,3m)=0</expression>
+                                    <recovery_expression>last(/zDEV - MikroTik - Sector/icmpping)=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>8d6aafaa77d94d73b5e577ecd4f69528</uuid>
+                    <name>Discovered Client Signal</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#CLIENT},1.3.6.1.4.1.14988.1.1.1.2.1.20]</snmp_oid>
+                    <key>mikrotik.client.discovery</key>
+                    <delay>5m</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#CLIENT}</macro>
+                                <value>.+</value>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <lifetime>365d</lifetime>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>5d8317025d394187a340f70df1faf49d</uuid>
+                            <name>Client {#CLIENT}:RX Signal</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.14988.1.1.1.2.1.3.{#SNMPINDEX}</snmp_oid>
+                            <key>wireless.client.rx[{#SNMPINDEX}]</key>
+                            <delay>5m</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>f759f977db0447d1a9718ec59459ad1a</uuid>
+                                    <expression>last(/zDEV - MikroTik - Sector/wireless.client.rx[{#SNMPINDEX}])&lt;{$CLIENT.RSSI.WARN}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>min(/zDEV - MikroTik - Sector/wireless.client.rx[{#SNMPINDEX}],5m)&gt;={$CLIENT.RSSI.WARN}</recovery_expression>
+                                    <name>Client: {#CLIENT} Signal is low (&lt;-70 dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <uuid>92c7a9d9c70843d69c118890fe1f9fd2</uuid>
+                    <name>Discovered Wireless Interface Stats</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#IFTYPE},1.3.6.1.2.1.2.2.1.3,{#IFNAME},1.3.6.1.2.1.31.1.1.1.1]</snmp_oid>
+                    <key>mikrotik.wireless.interface.stats</key>
+                    <delay>1h</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#IFTYPE}</macro>
+                                <value>^71$</value>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <lifetime>30d</lifetime>
+                    <enabled_lifetime_type>DISABLE_NEVER</enabled_lifetime_type>
+                    <description>Filter out only wireless interface types</description>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>cf64328772804d9a81e4af9e82d07cee</uuid>
+                            <name>Client count on interface {#IFNAME}</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.14988.1.1.1.3.1.6.{#SNMPINDEX}</snmp_oid>
+                            <key>mikrotik.wireless.client.count[{#SNMPINDEX}]</key>
+                            <delay>5m</delay>
+                            <history>30d</history>
+                            <status>DISABLED</status>
+                            <discover>NO_DISCOVER</discover>
+                            <tags>
+                                <tag>
+                                    <tag>stationcount</tag>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>a979752243944587873ec2a963048dd2</uuid>
+                                    <expression>min(/zDEV - MikroTik - Sector/mikrotik.wireless.client.count[{#SNMPINDEX}],2d)&gt;50</expression>
+                                    <name>High Subscriber Count on {#IFNAME}</name>
+                                    <priority>WARNING</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <tags>
+                <tag>
+                    <tag>Template</tag>
+                    <value>zDEV - MikroTik - Sector</value>
+                </tag>
+            </tags>
+            <macros>
+                <macro>
+                    <macro>{$CLIENT.RSSI.WARN}</macro>
+                    <value>-70</value>
+                    <description>Weak client RSSI warning threshold (dBm)</description>
+                </macro>
+            </macros>
+            <valuemaps>
+                <valuemap>
+                    <uuid>905ff317cf8f4a0ca14911aa650fa9b6</uuid>
+                    <name>Ping</name>
+                    <mappings>
+                        <mapping>
+                            <value>0</value>
+                            <newvalue>Down</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>1</value>
+                            <newvalue>Up</newvalue>
+                        </mapping>
+                    </mappings>
+                </valuemap>
+                <valuemap>
+                    <uuid>a0f36fa685db49fc8fe0f59a96993933</uuid>
+                    <name>Service State - SNMP</name>
+                    <mappings>
+                        <mapping>
+                            <value>0</value>
+                            <newvalue>Not Available</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>1</value>
+                            <newvalue>Available</newvalue>
+                        </mapping>
+                        <mapping>
+                            <value>2</value>
+                            <newvalue>Unknown</newvalue>
+                        </mapping>
+                    </mappings>
+                </valuemap>
+            </valuemaps>
+        </template>
+    </templates>
+</zabbix_export>
