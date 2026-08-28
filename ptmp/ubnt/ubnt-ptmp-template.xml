@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.4</version>
+    <template_groups>
+        <template_group>
+            <uuid>4fa5628cedc441c4947e90e13ad4a4b0</uuid>
+            <name>Templates/zDEV/Ubiquiti</name>
+        </template_group>
+    </template_groups>
+    <templates>
+        <template>
+            <uuid>8ef41f26d9b94442b3325b33690bde72</uuid>
+            <template>zDEV - Ubiquiti - Sector</template>
+            <name>zDEV - Ubiquiti - Sector</name>
+            <description>Wrapper template for generic Ubiquiti airOS APs. Links the separate services, base, interfaces, wireless-stats, and wireless-client-signals modules.</description>
+            <templates>
+                <template>
+                    <name>zDEV - Ubiquiti - Module - Base v2</name>
+                </template>
+                <template>
+                    <name>zDEV - Ubiquiti - Module - Interfaces v2</name>
+                </template>
+                <template>
+                    <name>zDEV - Ubiquiti - Module - Standard - Services v2</name>
+                </template>
+                <template>
+                    <name>zDEV - Ubiquiti - Module - Wireless - Client Signals v2</name>
+                </template>
+                <template>
+                    <name>zDEV - Ubiquiti - Module - Wireless - Radio Stats v2</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>Templates/zDEV/Ubiquiti</name>
+                </group>
+            </groups>
+            <tags>
+                <tag>
+                    <tag>Template</tag>
+                    <value>zDEV - Ubiquiti - AP</value>
+                </tag>
+            </tags>
+        </template>
+    </templates>
+</zabbix_export>
