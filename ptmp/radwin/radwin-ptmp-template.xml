@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.4</version>
+    <template_groups>
+        <template_group>
+            <uuid>126453d28ecd4397b7f91d2e4c5de849</uuid>
+            <name>Templates/zDEV/RADWIN</name>
+        </template_group>
+    </template_groups>
+    <templates>
+        <template>
+            <uuid>9a3ff9f88d6e46bcb09481d4cbfa5c07</uuid>
+            <template>zDEV - RADWIN - Sector - 5AB5</template>
+            <name>zDEV - RADWIN - Sector - 5AB5</name>
+            <groups>
+                <group>
+                    <name>Templates/zDEV/RADWIN</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>4c6ac6746dd84c198dd1196f84cd6fcd</uuid>
+                    <name>RADWIN Sector Monitor - Raw Data</name>
+                    <type>SCRIPT</type>
+                    <key>radwin.monitor.raw</key>
+                    <value_type>TEXT</value_type>
+                    <params>try {
+    var params = JSON.parse(value);
+    var baseUrl = 'http://' + params.url;
+    
+    var req = new HttpRequest();
+    
+    // Set HTTP Basic Auth
+    req.setHttpAuth(1, params.user, params.pass);
+    
+    // Set headers matching your browser's exact cURL
+    req.addHeader('Content-Type: text/plain;charset=UTF-8');
+    req.addHeader('Referer: ' + baseUrl + '/mobile/monitor.asp');
+    req.addHeader('Origin: ' + baseUrl);
+    
+    // Send POST request directly to monitorData.asp with cache-busting dummy payload
+    var monitorUrl = baseUrl + '/mobile/monitorData.asp';
+    var payload = 'dummy=' + Math.floor(Math.random() * 100);
+    
+    var response = req.post(monitorUrl, payload);
+
+    if (req.getStatus() !== 200) {
+        throw 'Fetch failed with HTTP ' + req.getStatus() + ': ' + response;
+    }
+
+    return response;
+
+} catch (error) {
+    Zabbix.log(3, 'RADWIN Fetch Error: ' + error);
+    return JSON.stringify({ error: error.toString() });
+}</params>
+                    <timeout>30s</timeout>
+                    <parameters>
+                        <parameter>
+                            <name>pass</name>
+                            <value>{$RADWIN.PASS}</value>
+                        </parameter>
+                        <parameter>
+                            <name>url</name>
+                            <value>{HOST.CONN}</value>
+                        </parameter>
+                        <parameter>
+                            <name>user</name>
+                            <value>{$RADWIN.USER}</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <uuid>e7e9470bd35d46e8b83dbf53ad452e2e</uuid>
+                    <name>Wireless : AP Population</name>
+                    <type>CALCULATED</type>
+                    <key>wireless.ap.population</key>
+                    <delay>10m</delay>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>round((last(//wireless.clients.count) / 32) * 100, 0)</params>
+                    <tags>
+                        <tag>
+                            <tag>ap_load</tag>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>2e76d53d5d17428684dd0e845caa5086</uuid>
+                    <name>Wireless: Registered client count</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.clients.count</key>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>// Preprocessing JavaScript to count registered HSUs
+var hsuSection = value.split('HBSMonData:')[1].split(';')[0];
+var hsus = hsuSection.split('*');
+return hsus.length;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                </item>
+                <item>
+                    <uuid>0b653c7ae08a40a9ab7c79761afa6ce0</uuid>
+                    <name>Wireless: Frequency</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.frequency</key>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var fields = value.split('|');
+
+if (fields[3]) {
+    // Take '5.510', remove the dot to get '5510'
+    var freqClean = fields[3].trim().replace('.', '');
+    return parseInt(freqClean, 10);
+}
+
+return 0;</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>frequency</tag>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>8baefa68e7024f90a2fa2ea924453ad7</uuid>
+                    <name>RADWIN Subscriber Units Discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>radwin.su.discovery</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>544a6f29d64c4b43949e88043ba1e002</uuid>
+                            <name>Downlink Rate: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.rate.dl[{#SU_MAC}]</key>
+                            <value_type>FLOAT</value_type>
+                            <trends>0</trends>
+                            <units>Mbps</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <parameters>
+                                        <parameter>var mac = &quot;{#SU_MAC}&quot;;
+var parts = value.split('HBSMonData:');
+if (parts.length &gt; 1) {
+    var entries = parts[1].split(';')[0].split('*');
+    for (var i = 0; i &lt; entries.length; i++) {
+        var f = entries[i].split('|');
+        if (f[11] &amp;&amp; f[11].trim() === mac) {
+            return parseFloat(f[7]); // Index 7 is Rx/Downlink Rate in Mbps
+        }
+    }
+}
+return 0;</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>e6ced0d0fd4f4062aabc12ee2b2b8ad4</uuid>
+                            <name>Downlink RSSI: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.rss.dl[{#SU_MAC}]</key>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <parameters>
+                                        <parameter>var mac = &quot;{#SU_MAC}&quot;;
+var parts = value.split('HBSMonData:');
+if (parts.length &gt; 1) {
+    var entries = parts[1].split(';')[0].split('*');
+    for (var i = 0; i &lt; entries.length; i++) {
+        var f = entries[i].split('|');
+        if (f[11] &amp;&amp; f[11].trim() === mac) {
+            return parseFloat(f[4]); // Index 4 is HSU Uplink RSSI (e.g., -50)
+        }
+    }
+}
+return 0;</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>dd0e83b6023c4ef7a43714d5aa26b053</uuid>
+                                    <expression>last(/zDEV - RADWIN - Sector - 5AB5/radwin.su.rss.dl[{#SU_MAC}])&lt;=-60</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/zDEV - RADWIN - Sector - 5AB5/radwin.su.rss.dl[{#SU_MAC}])&gt;-58</recovery_expression>
+                                    <name>{#SU_NAME}: Signal is low (&lt;= -60 dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>a8e1da109014403ca4e936f19f182637</uuid>
+                            <name>Downlink SNR : {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.snr.dl[{#SU_MAC}]</key>
+                            <value_type>FLOAT</value_type>
+                            <status>DISABLED</status>
+                            <discover>NO_DISCOVER</discover>
+                            <units>dB</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <parameters>
+                                        <parameter>var mac = &quot;{#SU_MAC}&quot;;
+var parts = value.split('HBSMonData:');
+if (parts.length &gt; 1) {
+    var entries = parts[1].split(';')[0].split('*');
+    for (var i = 0; i &lt; entries.length; i++) {
+        var f = entries[i].split('|');
+        if (f[11] &amp;&amp; f[11].trim() === mac) {
+            return parseFloat(f[15]); // Index 15 holds SNR / Quality metric (e.g., 51.7)
+        }
+    }
+}
+return 0;</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>78b35522446848b4a05864fefcbdf8e4</uuid>
+                            <name>Connection State: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.state[{#SU_MAC}]</key>
+                            <value_type>TEXT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <parameters>
+                                        <parameter>var mac = &quot;{#SU_MAC}&quot;;
+var parts = value.split('HBSMonData:');
+if (parts.length &gt; 1) {
+    var entries = parts[1].split(';')[0].split('*');
+    for (var i = 0; i &lt; entries.length; i++) {
+        var f = entries[i].split('|');
+        if (f[11] &amp;&amp; f[11].trim() === mac) {
+            return f[2].trim(); // Index 2 is Registration State (e.g., &quot;Registered&quot;)
+        }
+    }
+}
+return 'Unknown';</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_ID}</lld_macro>
+                            <path>$.hsuId</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_IP}</lld_macro>
+                            <path>$.ipAddress</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_MAC}</lld_macro>
+                            <path>$.macAddress</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_NAME}</lld_macro>
+                            <path>$.name</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>var lld = [];
+
+// 1. Isolate the HSU section between 'HBSMonData:' and ';'
+var parts = value.split('HBSMonData:');
+if (parts.length &gt; 1) {
+    var hsuSection = parts[1].split(';')[0];
+    var hsuEntries = hsuSection.split('*');
+
+    for (var i = 0; i &lt; hsuEntries.length; i++) {
+        var entry = hsuEntries[i].trim();
+        if (!entry) continue;
+
+        var fields = entry.split('|');
+
+        // Extract key fields according to RADWIN format
+        var suName = fields[0] ? fields[0].trim() : '';
+        var suMac  = fields[11] ? fields[11].trim() : '';
+        
+        if (suMac) {
+            lld.push({
+                &quot;{#SU_NAME}&quot;: suName,
+                &quot;{#SU_MAC}&quot;: suMac,
+                &quot;{#SU_IP}&quot;: fields[1] ? fields[1].trim() : '',
+                &quot;{#SU_SITE}&quot;: fields[3] ? fields[3].trim() : ''
+            });
+        }
+    }
+}
+
+return JSON.stringify(lld);</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$RADWIN.PASS}</macro>
+                    <value>netwireless</value>
+                    <description>RADWIN Web Password</description>
+                </macro>
+                <macro>
+                    <macro>{$RADWIN.USER}</macro>
+                    <value>admin</value>
+                    <description>RADWIN Web Username</description>
+                </macro>
+            </macros>
+        </template>
+        <template>
+            <uuid>5c8d547ad5e34028b7fea454b0318bd6</uuid>
+            <template>zDEV - RADWIN - Sector - 5AG6</template>
+            <name>zDEV - RADWIN - Sector - 5AG6</name>
+            <groups>
+                <group>
+                    <name>Templates/zDEV/RADWIN</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>c7264359fafd4aa2b13d2269a93e3a13</uuid>
+                    <name>RADWIN Sector Monitor - Raw Data</name>
+                    <type>SCRIPT</type>
+                    <key>radwin.monitor.raw</key>
+                    <value_type>TEXT</value_type>
+                    <params>try {
+    // 1. Parse host parameter
+    var params = JSON.parse(value);
+    var host = params.url ? params.url.trim() : '';
+
+    if (!host.startsWith('http://') &amp;&amp; !host.startsWith('https://')) {
+        host = 'http://' + host;
+    }
+
+    var userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36';
+
+    // 2. Authenticate
+    var authReq = new HttpRequest();
+    authReq.addHeader('Content-Type: application/json');
+    authReq.addHeader('Accept: application/json, text/plain, */*');
+    authReq.addHeader('User-Agent: ' + userAgent);
+
+    var authPayload = JSON.stringify({
+        &quot;username&quot;: &quot;{$RADWIN.USER}&quot;,
+        &quot;password&quot;: &quot;{$RADWIN.PASS}&quot;,
+        &quot;connection&quot;: &quot;local&quot;
+    });
+
+    var authResp = authReq.post(host + '/auth', authPayload);
+
+    if (authReq.getStatus() !== 200) {
+        throw 'Auth failed with HTTP ' + authReq.getStatus() + ': ' + authResp;
+    }
+
+    // Parse authentication tokens
+    var authJson = JSON.parse(authResp);
+    if (!authJson.data || !authJson.data.access_token) {
+        throw 'Auth response missing access_token';
+    }
+
+    var accessToken = authJson.data.access_token;
+    var clientId = authJson.data.clientId || '';
+
+    // 3. Extract session cookies
+    var headers = authReq.getHeaders();
+    var cookiePairs = [];
+    for (var k in headers) {
+        if (k.toLowerCase() === 'set-cookie') {
+            var rawVal = headers[k];
+            var cookieList = Array.isArray(rawVal) ? rawVal : typeof rawVal === 'string' ? rawVal.split(/\r?\n|, (?=[a-zA-Z0-9_ -]+=)/) : [];
+
+            for (var i = 0; i &lt; cookieList.length; i++) {
+                var c = cookieList[i].trim();
+                if (c) {
+                    var pair = c.split(';')[0].trim();
+                    if (pair &amp;&amp; cookiePairs.indexOf(pair) === -1) {
+                        cookiePairs.push(pair);
+                    }
+                }
+            }
+        }
+    }
+    var cookieHeader = cookiePairs.join('; ');
+
+    // 4. Fetch Monitor Data
+    var monitorReq = new HttpRequest();
+    monitorReq.addHeader('Accept: application/json, text/plain, */*');
+    monitorReq.addHeader('User-Agent: ' + userAgent);
+    monitorReq.addHeader('Authorization: Bearer ' + accessToken);
+    if (clientId) monitorReq.addHeader('clientId: ' + clientId);
+    monitorReq.addHeader('Referer: ' + host + '/hbs-dashboard/sector-view/table-view');
+    if (cookieHeader) monitorReq.addHeader('Cookie: ' + cookieHeader);
+
+    var timestamp = new Date().getTime();
+    var monitorUrl = host + '/api/v1/monitor?ddd=' + timestamp;
+    
+    var monitorResp = monitorReq.get(monitorUrl);
+
+    if (monitorReq.getStatus() !== 200) {
+        throw 'Monitor data fetch failed with HTTP ' + monitorReq.getStatus() + ': ' + monitorResp;
+    }
+
+    return monitorResp;
+
+} catch (error) {
+    Zabbix.log(3, '[ RADWIN Script ] Error: ' + error);
+    return JSON.stringify({&quot;error&quot;: String(error)});
+}</params>
+                    <timeout>30s</timeout>
+                    <parameters>
+                        <parameter>
+                            <name>url</name>
+                            <value>{HOST.CONN}</value>
+                        </parameter>
+                    </parameters>
+                </item>
+                <item>
+                    <uuid>c6fcec7ae45c4476a864a0975fe5d93d</uuid>
+                    <name>Wireless : AP Population</name>
+                    <type>CALCULATED</type>
+                    <key>wireless.ap.population</key>
+                    <delay>10m</delay>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>round((last(//wireless.clients.count) / 64) * 100, 0)</params>
+                    <tags>
+                        <tag>
+                            <tag>ap_load</tag>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>4b5e098145aa4c7cacb30ae03822c039</uuid>
+                    <name>Wireless: Carrier1 Frequency</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.carrier1.frequency</key>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$.data.carrier1Data.frequency</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>frequency</tag>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>70939be11c084bfd9293860bec50676e</uuid>
+                    <name>Wireless: Carrier2 Frequency</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.carrier2.frequency</key>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$.data.carrier2Data.frequency</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                    <tags>
+                        <tag>
+                            <tag>frequency</tag>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>f1903aca62724758acfb285cc30e49cf</uuid>
+                    <name>Wireless: Registered client count</name>
+                    <type>DEPENDENT</type>
+                    <key>wireless.clients.count</key>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$.data.linkData[?(@.state == 'syncRegistered')].length()</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>113198c140194fed88cfcb39bb4660c7</uuid>
+                    <name>RADWIN Subscriber Units Discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>radwin.su.discovery</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>990f69be9a0244bfa5b09d5110046398</uuid>
+                            <name>Downlink Rate: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.rate.dl[{#SU_MAC}]</key>
+                            <value_type>TEXT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.data.linkData[?(@.macAddress == '{#SU_MAC}')].rateDl.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>ee352c2dfec9459681fe781fc932d197</uuid>
+                            <name>Downlink RSSI: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.rss.dl[{#SU_MAC}]</key>
+                            <value_type>FLOAT</value_type>
+                            <units>dBm</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.data.linkData[?(@.macAddress == '{#SU_MAC}')].rss.rssUl.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>20c5cd447b1a4fde9f3ffea0265f5c62</uuid>
+                                    <expression>last(/zDEV - RADWIN - Sector - 5AG6/radwin.su.rss.dl[{#SU_MAC}])&lt;=-60</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/zDEV - RADWIN - Sector - 5AG6/radwin.su.rss.dl[{#SU_MAC}])&gt;-58</recovery_expression>
+                                    <name>{#SU_NAME}: Signal is low (&lt;= -60 dBm)</name>
+                                    <priority>WARNING</priority>
+                                    <description>Client: PAC003 A.Pace Balzan Signal is low (&lt;-70 dBm)</description>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>066049e9cc3a49e489db9ba01731d868</uuid>
+                            <name>Downlink SNR : {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.snr.dl[{#SU_MAC}]</key>
+                            <value_type>FLOAT</value_type>
+                            <units>dB</units>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.data.linkData[?(@.macAddress == '{#SU_MAC}')].rss.snrDl.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>4db1f0bc50c747ac8e307d950e42a029</uuid>
+                            <name>Connection State: {#SU_NAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>radwin.su.state[{#SU_MAC}]</key>
+                            <value_type>TEXT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$.data.linkData[?(@.macAddress == '{#SU_MAC}')].state.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>radwin.monitor.raw</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>radwin.monitor.raw</key>
+                    </master_item>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_ID}</lld_macro>
+                            <path>$.hsuId</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_IP}</lld_macro>
+                            <path>$.ipAddress</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_MAC}</lld_macro>
+                            <path>$.macAddress</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#SU_NAME}</lld_macro>
+                            <path>$.name</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$.data.linkData[*]</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$RADWIN.PASS}</macro>
+                    <value>netwireless</value>
+                    <description>RADWIN Web Password</description>
+                </macro>
+                <macro>
+                    <macro>{$RADWIN.USER}</macro>
+                    <value>admin</value>
+                    <description>RADWIN Web Username</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
